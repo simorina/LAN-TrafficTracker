@@ -1,0 +1,875 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&display=swap');
+
+/* Reset & Base */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Orbitron', monospace;
+  background: #000000;
+  color: #00FFFF;
+  overflow-x: hidden;
+}
+
+/* Loading Screen */
+.jarvis-loading {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, #001a1a 0%, #000000 100%);
+  position: relative;
+  padding: 1rem;
+}
+
+.jarvis-spinner {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  margin-bottom: 2rem;
+}
+
+.spinner-ring {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 3px solid transparent;
+  border-top-color: #00FFFF;
+  border-radius: 50%;
+  animation: spin 1.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+}
+
+.spinner-ring:nth-child(2) {
+  width: 80%;
+  height: 80%;
+  top: 10%;
+  left: 10%;
+  border-top-color: #FF00FF;
+  animation-delay: -0.5s;
+  animation-duration: 1.2s;
+}
+
+.spinner-ring:nth-child(3) {
+  width: 60%;
+  height: 60%;
+  top: 20%;
+  left: 20%;
+  border-top-color: #00FF7F;
+  animation-delay: -1s;
+  animation-duration: 0.9s;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.jarvis-loading-text {
+  font-size: clamp(1rem, 3vw, 1.5rem);
+  font-weight: 700;
+  color: #00FFFF;
+  text-shadow: 0 0 20px #00FFFF;
+  letter-spacing: 2px;
+  animation: pulse 2s ease-in-out infinite;
+  text-align: center;
+  padding: 0 1rem;
+}
+
+.jarvis-loading-subtext {
+  margin-top: 1rem;
+  font-size: clamp(0.7rem, 2vw, 0.9rem);
+  color: #00FFFF80;
+  font-family: 'Courier New', monospace;
+  text-align: center;
+  word-break: break-all;
+  padding: 0 1rem;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Dashboard */
+.jarvis-dashboard {
+  min-height: 100vh;
+  padding: clamp(0.75rem, 2vw, 1.5rem);
+  background: #000000;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Animated Grid Background */
+.jarvis-grid {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 50px 50px;
+  animation: gridMove 20s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes gridMove {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(50px); }
+}
+
+/* Scanlines Effect */
+.scanlines {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 255, 255, 0.03) 2px,
+    rgba(0, 255, 255, 0.03) 4px
+  );
+  pointer-events: none;
+  z-index: 1;
+  animation: scanline 8s linear infinite;
+}
+
+@keyframes scanline {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(100%); }
+}
+
+/* Header */
+.jarvis-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: clamp(1rem, 2vw, 1.5rem);
+  background: linear-gradient(135deg, rgba(0, 255, 255, 0.1) 0%, rgba(0, 0, 0, 0.8) 100%);
+  border: 2px solid rgba(0, 255, 255, 0.3);
+  border-radius: clamp(10px, 2vw, 15px);
+  margin-bottom: clamp(1rem, 2vw, 2rem);
+  position: relative;
+  z-index: 10;
+  backdrop-filter: blur(10px);
+  box-shadow: 
+    0 0 30px rgba(0, 255, 255, 0.3),
+    inset 0 0 20px rgba(0, 255, 255, 0.05);
+  animation: headerGlow 3s ease-in-out infinite alternate;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+@keyframes headerGlow {
+  0% { box-shadow: 0 0 30px rgba(0, 255, 255, 0.3), inset 0 0 20px rgba(0, 255, 255, 0.05); }
+  100% { box-shadow: 0 0 50px rgba(0, 255, 255, 0.5), inset 0 0 30px rgba(0, 255, 255, 0.1); }
+}
+
+.jarvis-header-left {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.75rem, 2vw, 1.5rem);
+  flex: 1;
+  min-width: 0;
+}
+
+.jarvis-logo {
+  position: relative;
+  width: clamp(40px, 8vw, 60px);
+  height: clamp(40px, 8vw, 60px);
+  flex-shrink: 0;
+}
+
+.logo-core {
+  position: absolute;
+  width: 50%;
+  height: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, #00FFFF 0%, #0088FF 100%);
+  border-radius: 50%;
+  box-shadow: 
+    0 0 20px #00FFFF,
+    0 0 40px #00FFFF,
+    inset 0 0 10px #FFFFFF;
+  animation: coreRotate 4s linear infinite;
+}
+
+.logo-ring {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 3px solid #00FFFF;
+  border-radius: 50%;
+  border-top-color: transparent;
+  border-right-color: transparent;
+  animation: ringRotate 2s linear infinite;
+  box-shadow: 0 0 15px #00FFFF;
+}
+
+@keyframes coreRotate {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes ringRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.jarvis-title {
+  font-size: clamp(1.25rem, 4vw, 2.5rem);
+  font-weight: 900;
+  color: #00FFFF;
+  text-shadow: 
+    0 0 10px #00FFFF,
+    0 0 20px #00FFFF,
+    0 0 30px #00FFFF;
+  letter-spacing: clamp(2px, 1vw, 8px);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.jarvis-subtitle {
+  font-size: clamp(0.65rem, 1.5vw, 0.9rem);
+  color: #00FFFF80;
+  letter-spacing: clamp(1px, 0.5vw, 3px);
+  margin-top: 0.25rem;
+  line-height: 1.3;
+}
+
+.jarvis-header-right {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.75rem, 2vw, 2rem);
+  flex-wrap: wrap;
+}
+
+.jarvis-time {
+  font-size: clamp(1rem, 2.5vw, 1.5rem);
+  font-weight: 700;
+  color: #00FF7F;
+  text-shadow: 0 0 10px #00FF7F;
+  letter-spacing: clamp(1px, 0.3vw, 2px);
+  font-family: 'Courier New', monospace;
+}
+
+.jarvis-status {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.5rem, 1vw, 0.75rem);
+  padding: clamp(0.5rem, 1.5vw, 0.75rem) clamp(0.75rem, 2vw, 1.5rem);
+  background: rgba(0, 0, 0, 0.6);
+  border: 2px solid;
+  border-radius: 25px;
+  font-weight: 700;
+  letter-spacing: clamp(1px, 0.3vw, 2px);
+  font-size: clamp(0.7rem, 1.5vw, 0.9rem);
+  white-space: nowrap;
+}
+
+.jarvis-status-connected {
+  border-color: #00FF7F;
+  color: #00FF7F;
+}
+
+.jarvis-status-connecting {
+  border-color: #FFD700;
+  color: #FFD700;
+}
+
+.jarvis-status-disconnected {
+  border-color: #FF0000;
+  color: #FF0000;
+}
+
+.status-dot {
+  width: clamp(8px, 2vw, 12px);
+  height: clamp(8px, 2vw, 12px);
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 15px currentColor;
+  animation: statusPulse 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes statusPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.7; }
+}
+
+/* Stats Panel */
+.jarvis-stats-panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr));
+  gap: clamp(0.75rem, 2vw, 1.5rem);
+  margin-bottom: clamp(1rem, 2vw, 2rem);
+  position: relative;
+  z-index: 10;
+}
+
+.jarvis-stat-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: clamp(0.75rem, 2vw, 1.5rem);
+  padding: clamp(1rem, 2vw, 1.5rem);
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid rgba(0, 255, 255, 0.3);
+  border-radius: clamp(8px, 1.5vw, 12px);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.jarvis-stat-card:hover {
+  transform: translateY(-5px) scale(1.02);
+  border-color: rgba(0, 255, 255, 0.8);
+  box-shadow: 0 10px 40px rgba(0, 255, 255, 0.4);
+}
+
+.stat-glow {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.jarvis-stat-card:hover .stat-glow {
+  opacity: 1;
+}
+
+.stat-glow-cyan {
+  background: radial-gradient(circle at top left, rgba(0, 255, 255, 0.2), transparent);
+}
+
+.stat-glow-green {
+  background: radial-gradient(circle at top left, rgba(0, 255, 127, 0.2), transparent);
+}
+
+.stat-glow-magenta {
+  background: radial-gradient(circle at top left, rgba(255, 0, 255, 0.2), transparent);
+}
+
+.stat-glow-yellow {
+  background: radial-gradient(circle at top left, rgba(255, 215, 0, 0.2), transparent);
+}
+
+.stat-icon {
+  width: clamp(40px, 8vw, 50px);
+  height: clamp(40px, 8vw, 50px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 255, 255, 0.1);
+  border: 2px solid #00FFFF;
+  border-radius: clamp(6px, 1.5vw, 10px);
+  color: #00FFFF;
+  flex-shrink: 0;
+  animation: iconGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes iconGlow {
+  0% { box-shadow: 0 0 10px #00FFFF; }
+  100% { box-shadow: 0 0 25px #00FFFF; }
+}
+
+.stat-icon svg {
+  width: 60%;
+  height: 60%;
+}
+
+.stat-data {
+  flex: 1;
+  z-index: 1;
+  min-width: 0;
+}
+
+.stat-value {
+  font-size: clamp(1.25rem, 4vw, 2rem);
+  font-weight: 900;
+  color: #FFFFFF;
+  text-shadow: 0 0 15px currentColor;
+  letter-spacing: 1px;
+  display: block;
+  margin-bottom: 0.25rem;
+  word-break: break-word;
+}
+
+.stat-label {
+  font-size: clamp(0.65rem, 1.5vw, 0.75rem);
+  color: #00FFFF;
+  letter-spacing: clamp(1px, 0.3vw, 2px);
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.stat-rate {
+  font-size: clamp(0.6rem, 1.2vw, 0.7rem);
+  color: #00FF7F;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+/* Charts Grid */
+.jarvis-charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(350px, 100%), 1fr));
+  gap: clamp(0.75rem, 2vw, 1.5rem);
+  margin-bottom: clamp(1rem, 2vw, 2rem);
+  position: relative;
+  z-index: 10;
+}
+
+.jarvis-chart-main {
+  grid-column: 1 / -1;
+}
+
+.jarvis-chart-container {
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid rgba(0, 255, 255, 0.3);
+  border-radius: clamp(8px, 1.5vw, 12px);
+  padding: clamp(1rem, 2vw, 1.5rem);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.jarvis-chart-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #00FFFF, transparent);
+  animation: scanTop 3s linear infinite;
+}
+
+@keyframes scanTop {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+.jarvis-chart-container:hover {
+  border-color: rgba(0, 255, 255, 0.8);
+  box-shadow: 0 10px 40px rgba(0, 255, 255, 0.3);
+  transform: translateY(-3px);
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.chart-title {
+  font-size: clamp(0.75rem, 2vw, 1rem);
+  font-weight: 700;
+  color: #00FFFF;
+  letter-spacing: clamp(1px, 0.3vw, 2px);
+  text-shadow: 0 0 10px #00FFFF;
+  line-height: 1.3;
+}
+
+.chart-badge {
+  padding: clamp(0.25rem, 0.5vw, 0.35rem) clamp(0.5rem, 1vw, 0.75rem);
+  background: rgba(255, 0, 0, 0.2);
+  border: 1px solid #FF0000;
+  border-radius: 5px;
+  font-size: clamp(0.6rem, 1.2vw, 0.65rem);
+  font-weight: 700;
+  color: #FF0000;
+  letter-spacing: 1px;
+  animation: liveBlink 1.5s ease-in-out infinite;
+  white-space: nowrap;
+}
+
+@keyframes liveBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.chart-content {
+  height: clamp(250px, 50vw, 350px);
+  position: relative;
+}
+
+.jarvis-chart-main .chart-content {
+  height: clamp(300px, 60vw, 450px);
+}
+
+/* Devices Panel */
+.jarvis-devices-panel {
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid rgba(0, 255, 255, 0.3);
+  border-radius: clamp(8px, 1.5vw, 12px);
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  position: relative;
+  z-index: 10;
+  margin-bottom: clamp(1rem, 2vw, 2rem);
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: clamp(1rem, 2vw, 1.5rem);
+  background: rgba(0, 255, 255, 0.05);
+  border-bottom: 2px solid rgba(0, 255, 255, 0.3);
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.panel-title {
+  font-size: clamp(0.9rem, 2.5vw, 1.25rem);
+  font-weight: 700;
+  color: #00FFFF;
+  letter-spacing: clamp(1px, 0.5vw, 3px);
+  text-shadow: 0 0 10px #00FFFF;
+}
+
+.panel-count {
+  padding: clamp(0.4rem, 1vw, 0.5rem) clamp(0.75rem, 1.5vw, 1rem);
+  background: rgba(0, 255, 255, 0.1);
+  border: 1px solid #00FFFF;
+  border-radius: 20px;
+  font-size: clamp(0.7rem, 1.5vw, 0.8rem);
+  font-weight: 700;
+  color: #00FFFF;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+.devices-table-wrapper {
+  overflow-x: auto;
+  max-height: 600px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Custom Scrollbar */
+.devices-table-wrapper::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.devices-table-wrapper::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.devices-table-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 255, 0.5);
+  border-radius: 4px;
+}
+
+.devices-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 255, 255, 0.8);
+}
+
+.jarvis-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;
+}
+
+.jarvis-table thead {
+  position: sticky;
+  top: 0;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 10;
+}
+
+.jarvis-table th {
+  padding: clamp(0.75rem, 1.5vw, 1rem) clamp(0.5rem, 1.5vw, 1.5rem);
+  text-align: left;
+  font-size: clamp(0.65rem, 1.2vw, 0.75rem);
+  font-weight: 700;
+  color: #00FFFF;
+  letter-spacing: clamp(1px, 0.3vw, 2px);
+  border-bottom: 2px solid rgba(0, 255, 255, 0.3);
+  text-shadow: 0 0 8px #00FFFF;
+  white-space: nowrap;
+}
+
+.jarvis-table tbody tr {
+  border-bottom: 1px solid rgba(0, 255, 255, 0.1);
+  transition: all 0.3s ease;
+  animation: rowFadeIn 0.5s ease-out;
+}
+
+@keyframes rowFadeIn {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.jarvis-table tbody tr:hover {
+  background: rgba(0, 255, 255, 0.05);
+  box-shadow: inset 0 0 20px rgba(0, 255, 255, 0.1);
+}
+
+.jarvis-table td {
+  padding: clamp(0.75rem, 1.5vw, 1rem) clamp(0.5rem, 1.5vw, 1.5rem);
+  font-size: clamp(0.7rem, 1.4vw, 0.85rem);
+  color: #FFFFFF;
+  white-space: nowrap;
+}
+
+.device-id {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(30px, 6vw, 40px);
+  height: clamp(30px, 6vw, 40px);
+  border: 2px solid;
+  border-radius: clamp(5px, 1vw, 8px);
+  font-weight: 900;
+  font-size: clamp(0.9rem, 2vw, 1.1rem);
+  color: #00FFFF;
+  background: rgba(0, 255, 255, 0.1);
+  box-shadow: 0 0 15px currentColor;
+  flex-shrink: 0;
+}
+
+.mono-font {
+  font-family: 'Courier New', monospace;
+  color: #00FF7F;
+  font-size: clamp(0.65rem, 1.3vw, 0.8rem);
+}
+
+.ip-address {
+  color: #FFD700;
+  font-weight: 600;
+}
+
+.data-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.data-value {
+  font-weight: 700;
+  color: #FFFFFF;
+  font-size: clamp(0.7rem, 1.4vw, 0.85rem);
+}
+
+.data-rate {
+  font-size: clamp(0.6rem, 1.2vw, 0.7rem);
+  color: #00FFFF80;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: clamp(0.3rem, 0.6vw, 0.4rem) clamp(0.6rem, 1.2vw, 0.8rem);
+  background: rgba(0, 255, 127, 0.2);
+  border: 1px solid #00FF7F;
+  border-radius: 15px;
+  font-size: clamp(0.6rem, 1.2vw, 0.7rem);
+  font-weight: 700;
+  color: #00FF7F;
+  letter-spacing: 1px;
+  box-shadow: 0 0 10px rgba(0, 255, 127, 0.3);
+  animation: statusGlow 2s ease-in-out infinite;
+  white-space: nowrap;
+}
+
+@keyframes statusGlow {
+  0%, 100% { box-shadow: 0 0 10px rgba(0, 255, 127, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(0, 255, 127, 0.6); }
+}
+
+/* Footer */
+.jarvis-footer {
+  text-align: center;
+  padding: clamp(1rem, 2vw, 1.5rem);
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid rgba(0, 255, 255, 0.2);
+  border-radius: clamp(8px, 1.5vw, 12px);
+  position: relative;
+  z-index: 10;
+}
+
+.footer-text {
+  font-size: clamp(0.65rem, 1.3vw, 0.8rem);
+  color: #00FFFF80;
+  letter-spacing: clamp(0.5px, 0.3vw, 2px);
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+  /* Reduce animations on mobile for performance */
+  .jarvis-grid,
+  .scanlines {
+    display: none;
+  }
+
+  /* Stack header vertically */
+  .jarvis-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .jarvis-header-left,
+  .jarvis-header-right {
+    justify-content: center;
+  }
+
+  /* Single column for stats */
+  .jarvis-stats-panel {
+    grid-template-columns: 1fr;
+  }
+
+  /* Single column for charts */
+  .jarvis-charts-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Reduce table min-width on mobile */
+  .jarvis-table {
+    min-width: 500px;
+  }
+
+  /* Better touch targets */
+  .jarvis-stat-card {
+    min-height: 80px;
+  }
+
+  /* Remove hover effects on touch devices */
+  @media (hover: none) {
+    .jarvis-stat-card:hover,
+    .jarvis-chart-container:hover {
+      transform: none;
+      box-shadow: none;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  /* Extra small mobile adjustments */
+  .jarvis-spinner {
+    width: 100px;
+    height: 100px;
+  }
+
+  .jarvis-table {
+    min-width: 450px;
+  }
+
+  /* Ensure text is readable */
+  .jarvis-title {
+    min-font-size: 1.25rem;
+  }
+
+  .stat-value {
+    min-font-size: 1.25rem;
+  }
+}
+
+/* Landscape mobile */
+@media (max-width: 900px) and (orientation: landscape) {
+  .jarvis-dashboard {
+    padding: 0.75rem;
+  }
+
+  .chart-content,
+  .jarvis-chart-main .chart-content {
+    height: 250px;
+  }
+}
+
+/* Tablet optimizations */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .jarvis-charts-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .jarvis-chart-main {
+    grid-column: 1 / -1;
+  }
+
+  .jarvis-stats-panel {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Large desktop */
+@media (min-width: 1600px) {
+  .jarvis-dashboard {
+    max-width: 1800px;
+    margin: 0 auto;
+  }
+
+  .jarvis-charts-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .jarvis-chart-main {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Print styles */
+@media print {
+  .jarvis-grid,
+  .scanlines,
+  .jarvis-footer {
+    display: none;
+  }
+
+  .jarvis-dashboard {
+    background: white;
+  }
+
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .jarvis-dashboard {
+    border: 3px solid #00FFFF;
+  }
+
+  .jarvis-stat-card,
+  .jarvis-chart-container,
+  .jarvis-devices-panel {
+    border-width: 3px;
+  }
+}
