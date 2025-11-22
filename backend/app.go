@@ -6,10 +6,12 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"sort"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -51,11 +53,14 @@ type BandwidthMonitor struct {
 	mutex     sync.RWMutex
 	localIP   string
 	startTime time.Time
+	// WebSocket clients
 	clients   map[*websocket.Conn]bool
 	clientsMu sync.RWMutex
+	// Channel for broadcasting updates
 	broadcast chan *NetworkStats
 }
 
+// WebSocket upgrader
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		return true // Allow all origins in development
@@ -64,6 +69,7 @@ var upgrader = websocket.Upgrader{
 
 // NewBandwidthMonitor creates a new BandwidthMonitor instance
 func NewBandwidthMonitor(localIP string) *BandwidthMonitor {
+	// Initialize the BandwidthMonitor
 	return &BandwidthMonitor{
 		devices:   make(map[string]*DeviceStats),
 		localIP:   localIP,
@@ -74,55 +80,78 @@ func NewBandwidthMonitor(localIP string) *BandwidthMonitor {
 }
 
 // UpdateStats updates the statistics for a device based on a captured packet
+// Keying strategy: prefer MAC; if MAC empty use IP so we don't lose devices that only show IP.
 func (bm *BandwidthMonitor) UpdateStats(srcMAC, dstMAC, srcIP, dstIP string, packetSize uint64) {
+	// Lock for writing
 	bm.mutex.Lock()
 	defer bm.mutex.Unlock()
+	// Current timestamp
 	now := time.Now()
 
-	// Update source device
-	if srcMAC != "" && srcMAC != "ff:ff:ff:ff:ff:ff" {
-		key := srcMAC
+	// Helper to update a device by key
+	update := func(key, mac, ip string, sent bool, size uint64) {
+		if key == "" {
+			return
+		}
 		if _, exists := bm.devices[key]; !exists {
 			bm.devices[key] = &DeviceStats{
-				MAC: srcMAC,
-				IP:  srcIP,
+				MAC: mac,
+				IP:  ip,
 			}
 		}
-		bm.devices[key].BytesSent += packetSize
-		bm.devices[key].PacketsSent++
-		bm.devices[key].LastSeen = now
-		if srcIP != "" && bm.devices[key].IP == "" {
-			bm.devices[key].IP = srcIP
+		dev := bm.devices[key]
+		if sent {
+			dev.BytesSent += size
+			dev.PacketsSent++
+		} else {
+			dev.BytesRecv += size
+			dev.PacketsRecv++
 		}
+		dev.LastSeen = now
+		// prefer storing IP if not present
+		if dev.IP == "" && ip != "" {
+			dev.IP = ip
+		}
+		// prefer storing MAC if not present
+		if dev.MAC == "" && mac != "" {
+			dev.MAC = mac
+		}
+	}
+
+	// Update source device: prefer MAC key else IP key
+	if srcMAC != "" && srcMAC != "ff:ff:ff:ff:ff:ff" {
+		update(srcMAC, srcMAC, srcIP, true, packetSize)
+	} else if srcIP != "" {
+		update(srcIP, srcMAC, srcIP, true, packetSize)
 	}
 
 	// Update destination device
 	if dstMAC != "" && dstMAC != "ff:ff:ff:ff:ff:ff" {
-		key := dstMAC
-		if _, exists := bm.devices[key]; !exists {
-			bm.devices[key] = &DeviceStats{
-				MAC: dstMAC,
-				IP:  dstIP,
-			}
-		}
-		bm.devices[key].BytesRecv += packetSize
-		bm.devices[key].PacketsRecv++
-		bm.devices[key].LastSeen = now
-		if dstIP != "" && bm.devices[key].IP == "" {
-			bm.devices[key].IP = dstIP
-		}
+		update(dstMAC, dstMAC, dstIP, false, packetSize)
+	} else if dstIP != "" {
+		update(dstIP, dstMAC, dstIP, false, packetSize)
 	}
 }
 
-// GetNetworkStats returns current network statistics
+// Replace the existing GetNetworkStats with this filtered version.
+// Also make sure "strings" is present in the import list at the top: "strings"
 func (bm *BandwidthMonitor) GetNetworkStats() *NetworkStats {
+	// Lock for reading
 	bm.mutex.RLock()
 	defer bm.mutex.RUnlock()
 
+	// Prepare device stats slice
 	devices := make([]*DeviceStats, 0, len(bm.devices))
+	// Aggregate totals
 	var totalSent, totalRecv, totalPackets uint64
 
+	// Copy device stats to avoid race conditions and FILTER to internal 192.168.* IPs
 	for _, dev := range bm.devices {
+		// Only include devices that have an IP starting with 192.168.
+		// Devices without an IP (or with IPs outside 192.168.*) are ignored.
+		if dev.IP == "" || !strings.HasPrefix(dev.IP, "192.168.") {
+			continue
+		}
 		devCopy := *dev
 		devices = append(devices, &devCopy)
 		totalSent += dev.BytesSent
@@ -130,13 +159,14 @@ func (bm *BandwidthMonitor) GetNetworkStats() *NetworkStats {
 		totalPackets += dev.PacketsSent + dev.PacketsRecv
 	}
 
-	// Sort by total bandwidth
+	// Sort by total bandwidth (descending)
 	sort.Slice(devices, func(i, j int) bool {
 		totalI := devices[i].BytesSent + devices[i].BytesRecv
 		totalJ := devices[j].BytesSent + devices[j].BytesRecv
 		return totalI > totalJ
 	})
 
+	// Return filtered network stats
 	return &NetworkStats{
 		Devices:         devices,
 		TotalSent:       totalSent,
@@ -150,11 +180,14 @@ func (bm *BandwidthMonitor) GetNetworkStats() *NetworkStats {
 
 // WebSocket handler
 func (bm *BandwidthMonitor) handleWebSocket(w http.ResponseWriter, r *http.Request) {
+	// Upgrade HTTP connection to WebSocket
 	conn, err := upgrader.Upgrade(w, r, nil)
+	// Handle upgrade error
 	if err != nil {
 		log.Printf("WebSocket upgrade error: %v", err)
 		return
 	}
+	// Ensure connection is closed on exit
 	defer conn.Close()
 
 	// Register client
@@ -162,6 +195,7 @@ func (bm *BandwidthMonitor) handleWebSocket(w http.ResponseWriter, r *http.Reque
 	bm.clients[conn] = true
 	bm.clientsMu.Unlock()
 
+	// Log connection
 	log.Printf("WebSocket client connected from %s. Total clients: %d", r.RemoteAddr, len(bm.clients))
 
 	// Send initial data
@@ -184,15 +218,18 @@ func (bm *BandwidthMonitor) handleWebSocket(w http.ResponseWriter, r *http.Reque
 
 // Broadcast stats to all WebSocket clients
 func (bm *BandwidthMonitor) broadcastStats() {
+	// Listen for stats to broadcast
 	for stats := range bm.broadcast {
 		bm.clientsMu.RLock()
 		for client := range bm.clients {
 			if err := client.WriteJSON(stats); err != nil {
 				log.Printf("Error broadcasting to client: %v", err)
 				client.Close()
+				bm.clientsMu.RUnlock()
 				bm.clientsMu.Lock()
 				delete(bm.clients, client)
 				bm.clientsMu.Unlock()
+				bm.clientsMu.RLock()
 			}
 		}
 		bm.clientsMu.RUnlock()
@@ -242,6 +279,48 @@ func getLocalIP(deviceName string, devices []pcap.Interface) string {
 		}
 	}
 	return ""
+}
+
+// resolveHostnamesPeriodically resolves hostnames for known device IPs and fills DeviceStats.Hostname.
+// It will attempt reverse DNS lookup (LookupAddr) and set Hostname when available.
+func (bm *BandwidthMonitor) resolveHostnamesPeriodically(interval time.Duration, stop <-chan struct{}) {
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-stop:
+			return
+		case <-ticker.C:
+			// Copy keys to avoid holding lock during network calls
+			bm.mutex.RLock()
+			ips := make(map[string]string) // key -> ip
+			for key, dev := range bm.devices {
+				if dev.IP != "" && dev.Hostname == "" {
+					ips[key] = dev.IP
+				}
+			}
+			bm.mutex.RUnlock()
+
+			for key, ip := range ips {
+				names, err := net.LookupAddr(ip)
+				if err != nil || len(names) == 0 {
+					// no reverse DNS found; skip
+					continue
+				}
+				// Use first name, trim trailing dot
+				name := names[0]
+				if len(name) > 0 && name[len(name)-1] == '.' {
+					name = name[:len(name)-1]
+				}
+				// update device
+				bm.mutex.Lock()
+				if dev, ok := bm.devices[key]; ok {
+					dev.Hostname = name
+				}
+				bm.mutex.Unlock()
+			}
+		}
+	}
 }
 
 func main() {
@@ -328,6 +407,10 @@ func main() {
 	// Start WebSocket broadcaster
 	go monitor.broadcastStats()
 
+	// Start hostname resolver goroutine
+	stopResolve := make(chan struct{})
+	go monitor.resolveHostnamesPeriodically(10*time.Second, stopResolve)
+
 	// Start packet capture
 	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
 	packets := packetSource.Packets()
@@ -410,6 +493,8 @@ func main() {
 
 	<-sigChan
 	log.Println("\nShutting down server...")
+	// stop resolver
+	close(stopResolve)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	server.Shutdown(ctx)
